@@ -10,6 +10,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.grocery.download.ui.DownloadActivity;
 import com.grocery.library.R;
 
 import java.io.File;
@@ -71,7 +72,8 @@ public class DownloadEngine {
                 notificationManager.cancel(NOTIFY_ID);
             } else {
                 Notification.Builder builder = new Notification.Builder(context);
-                Intent intent = new Intent(ACTION_DOWNLOAD_ACTIVITY);
+                Intent intent = new Intent();
+                intent.setClass(context, DownloadActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 PendingIntent downloadIntent = PendingIntent.getActivity(context, REQUEST_CODE, intent, PendingIntent.FLAG_CANCEL_CURRENT);
                 Resources resources = context.getResources();
@@ -103,7 +105,7 @@ public class DownloadEngine {
      * for some server, the url of resource if temporary
      * maybe need setting interceptor to update the url
      */
-    List<DownloadController.Interceptor> interceptors;
+    List<DownloadManager.Interceptor> interceptors;
 
     /**
      * download ThreadPoolExecutor
@@ -192,7 +194,7 @@ public class DownloadEngine {
     /**
      * @param interceptor which implements method updateDownloadInfo(DownloadInfo info)
      */
-    void addInterceptor(DownloadController.Interceptor interceptor) {
+    void addInterceptor(DownloadManager.Interceptor interceptor) {
         if (interceptor == null || interceptors.contains(interceptor)) return;
         interceptors.add(interceptor);
     }

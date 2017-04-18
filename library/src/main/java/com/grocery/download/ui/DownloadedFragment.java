@@ -17,7 +17,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.grocery.download.library.DownloadController;
+import com.grocery.download.library.DownloadManager;
 import com.grocery.download.library.DownloadInfo;
 import com.grocery.download.library.DownloadJobListener;
 import com.grocery.download.library.FileManager;
@@ -47,7 +47,7 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
     private DownloadAdapter adapter;
     private RecyclerView recyclerView;
     private List<DownloadInfo> downloads;
-    private DownloadController controller;
+    private DownloadManager controller;
     private FileManager fileManager;
 
     private DownloadJobListener jobListener = new DownloadJobListener() {
@@ -78,7 +78,7 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
         downloads = new ArrayList<>();
         Context context = getContext();
         fileManager = FileManager.getInstance(context);
-        controller = DownloadController.get(context);
+        controller = DownloadManager.get(context);
         controller.addDownloadJobListener(jobListener);
         Collection<DownloadInfo> infos = controller.getAllInfo();
         for (DownloadInfo info : infos) {

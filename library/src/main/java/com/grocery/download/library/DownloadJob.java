@@ -125,7 +125,7 @@ public class DownloadJob implements Runnable {
             onStateChanged(DownloadState.STATE_RUNNING, false);
             onProgressChanged(info.finishedLength, info.contentLength);
             if (engine.interceptors != null) {
-                for (DownloadController.Interceptor interceptor : engine.interceptors) {
+                for (DownloadManager.Interceptor interceptor : engine.interceptors) {
                     interceptor.updateDownloadInfo(info);
                 }
             }
