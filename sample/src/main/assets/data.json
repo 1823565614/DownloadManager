@@ -1,0 +1,22 @@
+[
+  {
+    "name": "微信.apk",
+    "icon": "http://android-artworks.25pp.com/fs08/2016/11/21/11/106_31e1fced509900af481c2395e430a0f7_con.png",
+    "url": "http://android-apps.25pp.com/fs08/2017/03/30/4/106_8d2f896737f9ec0e4f4112940b0e1e01.apk?yingid=pp_client&packageid=600484222&md5=a57eb927aa21ab73d521be20dd0bf61b&minSDK=16&size=42394725&shortMd5=bac7d3c6570004936d2c4cd2b3f34ec8&crc32=1869511767"
+  },
+  {
+    "name": "UC浏览器.apk",
+    "icon": "http://android-artworks.25pp.com/fs08/2017/04/11/1/110_e9eb30ac51570ca1d8a958599587575c_con.png",
+    "url": "http://android-apps.25pp.com/fs08/2017/04/11/2/110_d85166f55cbee0364add195490af29e6.apk?yingid=pp_client&packageid=600487902&md5=465d2eba23051c64a527bdb18b5a9ae4&minSDK=14&size=30476603&shortMd5=3eae632d248a91953dcbc189df89364e&crc32=1794252153"
+  },
+  {
+    "name": "QQ.apk",
+    "icon": "http://android-artworks.25pp.com/fs08/2017/03/29/5/110_310ddfde01b8660b1745f162e036a545_con.png",
+    "url": "http://android-apps.25pp.com/fs08/2017/03/29/6/110_384ff93588de3ec5e0d085c3b90a4e5b.apk?yingid=pp_client&packageid=200473997&md5=1e9867bea9b5deede24353835cfc3acc&minSDK=15&size=40313598&shortMd5=147bfcc7a859e0276d143569be0f67e9&crc32=1139213962"
+  },
+  {
+    "name": "全民K歌.apk",
+    "icon": "http://android-artworks.25pp.com/fs08/2017/04/18/5/110_e2dd603bb2f90b84e0089089d914c95f_con.png",
+    "url": "http://android-apps.25pp.com/fs08/2017/04/18/11/110_0618bf118314516f1e5899db4dd7a484.apk?yingid=pp_client&packageid=400473224&md5=42fc228652bbff0d4e3cea778f1b2c91&minSDK=8&size=26901513&shortMd5=13ecc283828bdc9ab142e7f1f12e6552&crc32=2736530615"
+  }
+]

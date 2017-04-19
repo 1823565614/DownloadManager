@@ -92,6 +92,10 @@ public class DownloadJob implements Runnable {
         engine.executor.submit(this);
     }
 
+    void remove(){
+        onStateChanged(DownloadState.STATE_UNKNOWN, false);
+    }
+
     private void clear() {
         listeners.clear();
         engine = null;

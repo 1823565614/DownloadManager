@@ -35,7 +35,6 @@ public class DownloadEngine {
     private static final int KEEP_ALIVE = 10;
     private static final int NOTIFY_ID = 10000;
     private static final int REQUEST_CODE = 100;
-    private static final String ACTION_DOWNLOAD_ACTIVITY = "download.action.DownloadActivity";
 
     /**
      * observes job lifecycle: onJobCreated, onJobStarted, onJobCompleted
@@ -201,6 +200,7 @@ public class DownloadEngine {
 
     /**
      * add downloadJobListener to observe the job lifecycle
+     *
      * @param downloadJobListener which implements onJobCreated, onJobStarted, onJobCompleted
      */
     void addDownloadJobListener(DownloadJobListener downloadJobListener) {
@@ -211,6 +211,7 @@ public class DownloadEngine {
 
     /**
      * remove downloadJobListener that observing the job lifecycle
+     *
      * @param downloadJobListener which implements onJobCreated, onJobStarted, onJobCompleted
      */
     void removeDownloadJobListener(DownloadJobListener downloadJobListener) {
@@ -221,6 +222,7 @@ public class DownloadEngine {
 
     /**
      * prepare for the task, while creating a task, should callback the download info to the listener
+     *
      * @param task
      */
     void prepare(DownloadTask task) {
@@ -244,6 +246,7 @@ public class DownloadEngine {
     /**
      * if downloadJobs contains the relative job, and the job is not running, enqueue it
      * otherwise create the job and enqueue it
+     *
      * @param task
      */
     void enqueue(DownloadTask task) {
@@ -269,12 +272,14 @@ public class DownloadEngine {
 
     /**
      * remove the downloadJob and delete the relative info
+     *
      * @param task
      */
     void remove(DownloadTask task) {
         String key = task.key;
         if (!jobs.containsKey(key)) return;
         DownloadJob job = jobs.remove(task.key);
+        job.remove();
         delete(job.getInfo());
         if (!activeJobs.contains(job)) return;
         activeJobs.remove(job);
@@ -283,6 +288,7 @@ public class DownloadEngine {
 
     /**
      * pause the downloadJob
+     *
      * @param task
      */
     void pause(DownloadTask task) {
@@ -293,6 +299,7 @@ public class DownloadEngine {
 
     /**
      * resume the downloadJob if it has not been running
+     *
      * @param task
      */
     void resume(DownloadTask task) {
@@ -307,6 +314,7 @@ public class DownloadEngine {
 
     /**
      * delete download info, remove file
+     *
      * @param info
      */
     void delete(final DownloadInfo info) {
@@ -330,6 +338,7 @@ public class DownloadEngine {
 
     /**
      * add download listener
+     *
      * @param task
      */
     void addListener(DownloadTask task) {
@@ -340,6 +349,7 @@ public class DownloadEngine {
 
     /**
      * remove download listener
+     *
      * @param task
      */
     void removeListener(DownloadTask task) {
@@ -350,6 +360,7 @@ public class DownloadEngine {
 
     /**
      * notify the downloadJob has been create
+     *
      * @param info
      */
     void onJobCreated(DownloadInfo info) {
@@ -360,6 +371,7 @@ public class DownloadEngine {
 
     /**
      * notify the downloadJob has been started
+     *
      * @param info
      */
     void onJobStarted(DownloadInfo info) {
@@ -371,6 +383,7 @@ public class DownloadEngine {
 
     /**
      * notify the downloadJob has been completed
+     *
      * @param success true if the job finished
      * @param info
      */
@@ -396,7 +409,6 @@ public class DownloadEngine {
     }
 
     /**
-     *
      * @return whether is in main thread
      */
     private boolean isMainThread() {

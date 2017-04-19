@@ -113,8 +113,8 @@ public class DownloadTask implements Comparable<DownloadTask> {
     }
 
     public void remove() {
-        this.listener = null;
         engine.remove(this);
+        this.listener = null;
     }
 
     public void pause() {
