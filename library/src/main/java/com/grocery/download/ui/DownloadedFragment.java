@@ -17,15 +17,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.grocery.download.library.DownloadManager;
 import com.grocery.download.library.DownloadInfo;
 import com.grocery.download.library.DownloadJobListener;
+import com.grocery.download.library.DownloadManager;
 import com.grocery.download.library.FileManager;
 import com.grocery.library.R;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -80,7 +79,7 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
         fileManager = FileManager.getInstance(context);
         controller = DownloadManager.get(context);
         controller.addDownloadJobListener(jobListener);
-        Collection<DownloadInfo> infos = controller.getAllInfo();
+        List<DownloadInfo> infos = controller.getAllInfo();
         for (DownloadInfo info : infos) {
             if (!info.isFinished()) continue;
             downloads.add(info);

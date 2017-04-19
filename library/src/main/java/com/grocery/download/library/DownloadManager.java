@@ -6,6 +6,8 @@ import android.net.Uri;
 
 import com.grocery.download.ui.DownloadActivity;
 
+import junit.framework.Assert;
+
 import java.util.List;
 
 /**
@@ -33,7 +35,7 @@ public class DownloadManager {
             FileManager fileManager = FileManager.getInstance(context);
             String extension = fileManager.getExtension(info.key);
             if (fileManager.isApk(extension)) {
-//            FileManager.getInstance(this).install(info.name, info.path, true);
+                FileManager.getInstance(context).install(info.path);
             } else if (fileManager.isMusic(extension)) {
                 context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + info.path)));
             }
@@ -56,7 +58,8 @@ public class DownloadManager {
         return instance;
     }
 
-    private void destroy() {
+    public void destroy() {
+        Assert.assertNotNull(engine);
         engine.removeDownloadJobListener(listener);
         engine.destroy();
         engine = null;
@@ -71,22 +74,27 @@ public class DownloadManager {
 
 
     public DownloadTask.Builder download(long id, String url, String name) {
+        Assert.assertNotNull(engine);
         return new DownloadTask.Builder(engine).id(id).url(url).name(name);
     }
 
     public void addInterceptor(Interceptor interceptor) {
+        Assert.assertNotNull(engine);
         engine.addInterceptor(interceptor);
     }
 
     public void addDownloadJobListener(DownloadJobListener downloadJobListener) {
+        Assert.assertNotNull(engine);
         engine.addDownloadJobListener(downloadJobListener);
     }
 
     public void removeDownloadJobListener(DownloadJobListener downloadJobListener) {
+        Assert.assertNotNull(engine);
         engine.removeDownloadJobListener(downloadJobListener);
     }
 
     public List<DownloadTask> getAllTasks() {
+        Assert.assertNotNull(engine);
         return engine.getAllTasks();
     }
 
@@ -95,12 +103,15 @@ public class DownloadManager {
     }
 
     public void delete(DownloadInfo info) {
+        Assert.assertNotNull(engine);
         engine.delete(info);
     }
 
     public boolean isActive() {
+        Assert.assertNotNull(engine);
         return engine.isActive();
     }
+
 
     public interface Interceptor {
 

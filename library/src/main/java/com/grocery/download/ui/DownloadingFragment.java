@@ -14,13 +14,13 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.grocery.download.library.DownloadManager;
 import com.grocery.download.library.DownloadInfo;
-import com.grocery.download.library.DownloadTask;
-import com.grocery.library.R;
 import com.grocery.download.library.DownloadJobListener;
 import com.grocery.download.library.DownloadListener;
+import com.grocery.download.library.DownloadManager;
+import com.grocery.download.library.DownloadTask;
 import com.grocery.download.library.FileManager;
+import com.grocery.library.R;
 
 import java.util.List;
 
@@ -217,7 +217,6 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
         TextView name;
         TextView size;
         TextView status;
-        long refreshProgressTime;
 
         public DownloadViewHolder(View itemView) {
             super(itemView);
@@ -304,9 +303,6 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
         @Override
         public void onProgressChanged(DownloadInfo info, long finishedLength, long contentLength) {
             if (!info.key.equals(this.key)) return;
-            long now = System.currentTimeMillis();
-            if (now - refreshProgressTime < 500) return;
-            refreshProgressTime = now;
             status.setText(String.format("%.1f%%", finishedLength * 100.f / Math.max(contentLength, 1)));
             if (contentLength == 0) {
                 size.setText(R.string.download_unknown);

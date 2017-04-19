@@ -32,18 +32,18 @@ public class DownloadActivity extends AppCompatActivity {
         super.onCreate(bundle);
         SwipeBackLayout.attachTo(this);
         setContentView(R.layout.activity_download);
-        bindView();
+        initContentView();
     }
 
-    public void bindView() {
+    public void initContentView() {
+        Resources resources = getResources();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimary));
+            getWindow().setStatusBarColor(resources.getColor(R.color.colorPrimary));
         }
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setTitle(R.string.title_download);
         downloadingFragment = new DownloadingFragment();
         downloadedFragment = new DownloadedFragment();
-        Resources resources = getResources();
         pages.add(new PageInfo(resources.getString(R.string.download_title_downloading), downloadingFragment));
         pages.add(new PageInfo(resources.getString(R.string.download_title_downloaded), downloadedFragment));
         viewPager = (ViewPager) findViewById(R.id.download_viewpager);
