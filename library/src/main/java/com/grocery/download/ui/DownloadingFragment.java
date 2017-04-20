@@ -103,7 +103,7 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
         super.onDestroy();
         controller.removeDownloadJobListener(jobListener);
         for (DownloadTask task : tasks) {
-            task.setListener(null);
+            task.clear();
         }
         tasks.clear();
         tasks = null;
@@ -152,7 +152,7 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             for (DownloadTask task : tasks) {
-                                task.remove();
+                                task.delete();
                             }
                             tasks.clear();
                             adapter.notifyDataSetChanged();
@@ -238,11 +238,11 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
             final DownloadTask task = tasks.get(position);
             if (v == itemView) {
                 switch (state) {
+                    case STATE_UNKNOWN:
                     case STATE_FAILED:
                         task.start();
                         break;
                     case STATE_PAUSED:
-                    case STATE_UNKNOWN:
                         task.resume();
                         break;
                     case STATE_WAITING:
@@ -257,7 +257,7 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if (tasks.contains(task)) {
-                                    task.remove();
+                                    task.delete();
                                     tasks.remove(task);
                                     adapter.notifyItemRemoved(position);
                                     updateUI();
@@ -274,15 +274,17 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
         }
 
         @Override
-        public void onStateChanged(DownloadInfo info, int state) {
-            if (!info.key.equals(this.key)) return;
+        public void onStateChanged(String key, int state) {
+            if (!key.equals(this.key)) return;
             this.state = state;
             switch (state) {
+                case STATE_UNKNOWN:
+                    status.setText(R.string.label_download);
+                    break;
                 case STATE_FAILED:
                     status.setText(R.string.download_retry);
                     break;
                 case STATE_PAUSED:
-                case STATE_UNKNOWN:
                     status.setText(R.string.download_resume);
                     break;
                 case STATE_WAITING:
@@ -301,8 +303,8 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
         }
 
         @Override
-        public void onProgressChanged(DownloadInfo info, long finishedLength, long contentLength) {
-            if (!info.key.equals(this.key)) return;
+        public void onProgressChanged(String key, long finishedLength, long contentLength) {
+            if (!key.equals(this.key)) return;
             status.setText(String.format("%.1f%%", finishedLength * 100.f / Math.max(contentLength, 1)));
             if (contentLength == 0) {
                 size.setText(R.string.download_unknown);

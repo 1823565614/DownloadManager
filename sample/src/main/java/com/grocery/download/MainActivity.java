@@ -15,7 +15,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.grocery.download.library.DownloadInfo;
 import com.grocery.download.library.DownloadListener;
 import com.grocery.download.library.DownloadManager;
 import com.grocery.download.library.DownloadTask;
@@ -69,6 +68,30 @@ public class MainActivity extends AppCompatActivity {
                 tasks.add(controller.download(i, url, name).extras(icon).create());
             }
         } catch (JSONException e) {
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        for (DownloadTask task : tasks) {
+            task.resumeListener();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        for (DownloadTask task : tasks) {
+            task.pauseListener();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        for (DownloadTask task : tasks) {
+            task.clear();
         }
     }
 
@@ -159,8 +182,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onStateChanged(DownloadInfo info, int state) {
-            if (!info.key.equals(this.key)) return;
+        public void onStateChanged(String key, int state) {
+            if (!key.equals(this.key)) return;
             this.state = state;
             switch (state) {
                 case STATE_FAILED:
@@ -176,17 +199,14 @@ public class MainActivity extends AppCompatActivity {
                     download.setText(R.string.download_wait);
                     break;
                 case STATE_FINISHED:
-                    if (tasks == null) return;
-                    int position = getAdapterPosition();
-                    DownloadTask task = tasks.get(position);
-                    task.clear();
+                    download.setText(R.string.download_done);
                     break;
             }
         }
 
         @Override
-        public void onProgressChanged(DownloadInfo info, long finishedLength, long contentLength) {
-            if (!info.key.equals(this.key)) return;
+        public void onProgressChanged(String key, long finishedLength, long contentLength) {
+            if (!key.equals(this.key)) return;
             download.setText(String.format("%.1f%%", finishedLength * 100.f / Math.max(contentLength, 1)));
             if (contentLength == 0) {
                 size.setText(R.string.download_unknown);

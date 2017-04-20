@@ -133,7 +133,7 @@ public class DownloadEngine {
         singleExecutor.allowCoreThreadTimeOut(true);
         notificationManager = (NotificationManager) this.context.getSystemService(Context.NOTIFICATION_SERVICE);
         provider = new DownloadProvider(this.context);
-        executor.submit(new Runnable() {
+        singleExecutor.submit(new Runnable() {
             @Override
             public void run() {
                 load();
@@ -155,7 +155,7 @@ public class DownloadEngine {
     }
 
     /**
-     * destroy and clear
+     * clear and clear
      */
     void destroy() {
         singleExecutor.shutdown();
@@ -210,7 +210,7 @@ public class DownloadEngine {
     }
 
     /**
-     * remove downloadJobListener that observing the job lifecycle
+     * delete downloadJobListener that observing the job lifecycle
      *
      * @param downloadJobListener which implements onJobCreated, onJobStarted, onJobCompleted
      */
@@ -229,7 +229,7 @@ public class DownloadEngine {
         String key = task.key;
         if (!infos.containsKey(key)) {  // do not contain this info, means that it will create a download job
             if (task.listener == null) return;
-            task.listener.onStateChanged(null, DownloadState.STATE_UNKNOWN);
+            task.listener.onStateChanged(key, DownloadState.STATE_UNKNOWN);
             return;
         }
         DownloadInfo info = infos.get(key);
@@ -237,7 +237,7 @@ public class DownloadEngine {
         task.createTime = info.createTime;
         if (!jobs.containsKey(key)) {  // uncompleted jobs do not contain this job, means the job had completed
             if (task.listener == null) return;
-            task.listener.onStateChanged(info, info.state); // info.state == DownloadState.STATE_FINISHED
+            task.listener.onStateChanged(key, info.state); // info.state == DownloadState.STATE_FINISHED
         } else {
             jobs.get(key).addListener(task.listener);
         }
@@ -271,15 +271,14 @@ public class DownloadEngine {
     }
 
     /**
-     * remove the downloadJob and delete the relative info
+     * delete the downloadJob and delete the relative info
      *
      * @param task
      */
-    void remove(DownloadTask task) {
+    void delete(DownloadTask task) {
         String key = task.key;
         if (!jobs.containsKey(key)) return;
         DownloadJob job = jobs.remove(task.key);
-        job.remove();
         delete(job.getInfo());
         if (!activeJobs.contains(job)) return;
         activeJobs.remove(job);
@@ -313,7 +312,7 @@ public class DownloadEngine {
     }
 
     /**
-     * delete download info, remove file
+     * delete download info, delete file
      *
      * @param info
      */
@@ -343,12 +342,21 @@ public class DownloadEngine {
      */
     void addListener(DownloadTask task) {
         String key = task.key;
-        if (!jobs.containsKey(key)) return;
-        jobs.get(key).addListener(task.listener);
+        if (!infos.containsKey(key)) {
+            if (task.listener == null) return;
+            task.listener.onStateChanged(key, DownloadState.STATE_UNKNOWN);
+        } else {
+            if (!jobs.containsKey(key)) {
+                if (task.listener == null) return;
+                task.listener.onStateChanged(key, DownloadState.STATE_FINISHED);
+            } else {
+                jobs.get(key).addListener(task.listener);
+            }
+        }
     }
 
     /**
-     * remove download listener
+     * delete download listener
      *
      * @param task
      */

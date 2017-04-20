@@ -24,21 +24,23 @@ public class DownloadJob implements Runnable {
     private Runnable changeState = new Runnable() {
         @Override
         public void run() {
-            for (DownloadListener listener : listeners) {
-                listener.onStateChanged(info, DownloadJob.this.info.state);
-            }
-            switch (info.state) {
-                case DownloadState.STATE_RUNNING:
-                    engine.onJobStarted(info);
-                    break;
-                case DownloadState.STATE_FINISHED:
-                    engine.onJobCompleted(true, info);
-                    clear();
-                    break;
-                case DownloadState.STATE_FAILED:
-                case DownloadState.STATE_PAUSED:
-                    engine.onJobCompleted(false, info);
-                    break;
+            synchronized (DownloadJob.class) {
+                for (DownloadListener listener : listeners) {
+                    listener.onStateChanged(info.key, DownloadJob.this.info.state);
+                }
+                switch (info.state) {
+                    case DownloadState.STATE_RUNNING:
+                        engine.onJobStarted(info);
+                        break;
+                    case DownloadState.STATE_FINISHED:
+                        engine.onJobCompleted(true, info);
+                        clear();
+                        break;
+                    case DownloadState.STATE_FAILED:
+                    case DownloadState.STATE_PAUSED:
+                        engine.onJobCompleted(false, info);
+                        break;
+                }
             }
         }
     };
@@ -46,8 +48,10 @@ public class DownloadJob implements Runnable {
     private Runnable changeProgress = new Runnable() {
         @Override
         public void run() {
-            for (DownloadListener listener : listeners) {
-                listener.onProgressChanged(info, DownloadJob.this.info.finishedLength, DownloadJob.this.info.contentLength);
+            synchronized (DownloadJob.class) {
+                for (DownloadListener listener : listeners) {
+                    listener.onProgressChanged(info.key, DownloadJob.this.info.finishedLength, DownloadJob.this.info.contentLength);
+                }
             }
         }
     };
@@ -63,14 +67,18 @@ public class DownloadJob implements Runnable {
     }
 
     void addListener(DownloadListener listener) {
-        if (listener == null || listeners.contains(listener)) return;
-        listener.onStateChanged(info, info.state);
-        listeners.add(listener);
+        synchronized (DownloadJob.class) {
+            if (listener == null || listeners.contains(listener)) return;
+            listener.onStateChanged(info.key, info.state);
+            listeners.add(listener);
+        }
     }
 
     void removeListener(DownloadListener listener) {
-        if (listener == null || !listeners.contains(listener)) return;
-        listeners.remove(listener);
+        synchronized (DownloadJob.class) {
+            if (listener == null || !listeners.contains(listener)) return;
+            listeners.remove(listener);
+        }
     }
 
     boolean isRunning() {
@@ -90,10 +98,6 @@ public class DownloadJob implements Runnable {
         onStateChanged(DownloadState.STATE_WAITING, false);
         isPaused = false;
         engine.executor.submit(this);
-    }
-
-    void remove(){
-        onStateChanged(DownloadState.STATE_UNKNOWN, false);
     }
 
     private void clear() {

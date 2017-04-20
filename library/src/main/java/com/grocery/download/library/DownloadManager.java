@@ -35,7 +35,7 @@ public class DownloadManager {
             FileManager fileManager = FileManager.getInstance(context);
             String extension = fileManager.getExtension(info.key);
             if (fileManager.isApk(extension)) {
-                FileManager.getInstance(context).install(info.path);
+//                FileManager.getInstance(context).install(info.path);
             } else if (fileManager.isMusic(extension)) {
                 context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + info.path)));
             }

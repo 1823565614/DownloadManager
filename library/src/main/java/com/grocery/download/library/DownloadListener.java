@@ -7,8 +7,8 @@ package com.grocery.download.library;
 // one-to-one association with DownloadTask
 public interface DownloadListener {
 
-    void onStateChanged(DownloadInfo info, int state);
+    void onStateChanged(String key, int state);
 
-    void onProgressChanged(DownloadInfo info, long finishedLength, long contentLength);
+    void onProgressChanged(String key, long finishedLength, long contentLength);
 
 }
