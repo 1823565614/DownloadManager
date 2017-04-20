@@ -48,6 +48,10 @@ public class DownloadManager {
         engine.addDownloadJobListener(listener);
     }
 
+    public void initialize() {
+        engine.initialize();
+    }
+
     public static DownloadManager get(Context context) {
         if (instance == null) {
             synchronized (DownloadManager.class) {

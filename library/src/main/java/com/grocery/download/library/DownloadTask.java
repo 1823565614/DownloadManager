@@ -120,6 +120,11 @@ public class DownloadTask implements Comparable<DownloadTask> {
         engine.resume(this);
     }
 
+    public void delete() {
+        engine.delete(this);
+        this.listener = null;
+    }
+
     public void resumeListener() {
         engine.addListener(this);
     }
@@ -130,11 +135,6 @@ public class DownloadTask implements Comparable<DownloadTask> {
 
     public void clear() {
         setListener(null);
-    }
-
-    public void delete() {
-        engine.delete(this);
-        this.listener = null;
     }
 
     public void setListener(DownloadListener listener) {

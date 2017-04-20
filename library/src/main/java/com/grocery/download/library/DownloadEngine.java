@@ -133,25 +133,24 @@ public class DownloadEngine {
         singleExecutor.allowCoreThreadTimeOut(true);
         notificationManager = (NotificationManager) this.context.getSystemService(Context.NOTIFICATION_SERVICE);
         provider = new DownloadProvider(this.context);
-        singleExecutor.submit(new Runnable() {
-            @Override
-            public void run() {
-                load();
-            }
-        });
     }
 
     /**
      * load download info from the database
      */
-    private void load() {
-        List<DownloadInfo> list = provider.query();
-        for (DownloadInfo info : list) {
-            infos.put(info.key, info);
-            if (info.isFinished()) continue;
-            DownloadJob job = new DownloadJob(this, info);
-            jobs.put(info.key, job);
-        }
+    void initialize() {
+        singleExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                List<DownloadInfo> list = provider.query();
+                for (DownloadInfo info : list) {
+                    infos.put(info.key, info);
+                    if (info.isFinished()) continue;
+                    DownloadJob job = new DownloadJob(DownloadEngine.this, info);
+                    jobs.put(info.key, job);
+                }
+            }
+        });
     }
 
     /**

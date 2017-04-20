@@ -99,6 +99,22 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        for (DownloadTask task : tasks) {
+            task.resumeListener();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        for (DownloadTask task : tasks) {
+            task.pauseListener();
+        }
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         controller.removeDownloadJobListener(jobListener);
@@ -293,6 +309,7 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
                 case STATE_FINISHED:
                     if (tasks == null) return;
                     int position = getAdapterPosition();
+                    if (position < 0) return;
                     DownloadTask task = tasks.get(position);
                     task.clear();
                     tasks.remove(task);

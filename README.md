@@ -73,5 +73,14 @@ task.pause();
 task.resume();
 
 //删除任务
-task.remove();
+task.delete();
+
+//暂停监听, 当activity或fragment onPause时调用
+task.pauseListener();
+
+//恢复监听，当activity或fragment onResume时调用
+task.resumeListener();
+
+//清理监听，当activity或fragment onDestroy时调用
+task.clear();
 ```
