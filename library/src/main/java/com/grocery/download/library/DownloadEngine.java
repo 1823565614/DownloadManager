@@ -57,8 +57,6 @@ class DownloadEngine {
      */
     private List<DownloadJob> activeJobs;
 
-    private ThreadPoolExecutor singleExecutor;
-
     /**
      * update notification
      */
@@ -129,8 +127,6 @@ class DownloadEngine {
         if (maxTask > CORE_POOL_SIZE) maxTask = CORE_POOL_SIZE;
         executor = new ThreadPoolExecutor(maxTask, maxTask, KEEP_ALIVE, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
         executor.allowCoreThreadTimeOut(true);
-        singleExecutor = new ThreadPoolExecutor(1, 1, KEEP_ALIVE, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-        singleExecutor.allowCoreThreadTimeOut(true);
         notificationManager = (NotificationManager) this.context.getSystemService(Context.NOTIFICATION_SERVICE);
         provider = new DownloadProvider(this.context);
     }
@@ -139,7 +135,7 @@ class DownloadEngine {
      * load download info from the database
      */
     void initialize() {
-        singleExecutor.submit(new Runnable() {
+        executor.submit(new Runnable() {
             @Override
             public void run() {
                 List<DownloadInfo> list = provider.query();
@@ -156,7 +152,6 @@ class DownloadEngine {
      * clear and clear
      */
     void destroy() {
-        singleExecutor.shutdown();
         executor.shutdown();
         interceptors.clear();
         downloadJobListeners.clear();
