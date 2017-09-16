@@ -6,9 +6,9 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.grocery.download.ui.DownloadActivity;
 import com.grocery.library.R;
@@ -17,7 +17,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -27,9 +26,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by 4ndroidev on 16/10/6.
  */
-public class DownloadEngine {
+class DownloadEngine {
 
-    public static final String DOWNLOAD_PATH = Environment.getExternalStorageDirectory().getPath() + File.separator + "Download";
+    private static final String TAG = "DownloadEngine";
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int CORE_POOL_SIZE = CPU_COUNT + 1;
     private static final int KEEP_ALIVE = 10;
@@ -91,7 +90,7 @@ public class DownloadEngine {
                 for (int i = 0; i < activeCount; i++) {
                     DownloadJob job = activeJobs.get(i);
                     if (job.isRunning()) {
-                        style.addLine(job.getInfo().name);
+                        style.addLine(job.info.name);
                     }
                 }
                 builder.setStyle(style);
@@ -116,7 +115,8 @@ public class DownloadEngine {
      */
     DownloadProvider provider;
     Handler handler;
-    Context context;
+
+    private Context context;
 
     DownloadEngine(Context context, int maxTask) {
         this.context = context.getApplicationContext();
@@ -127,9 +127,9 @@ public class DownloadEngine {
         downloadJobListeners = new ArrayList<>();
         handler = new Handler(Looper.getMainLooper());
         if (maxTask > CORE_POOL_SIZE) maxTask = CORE_POOL_SIZE;
-        executor = new ThreadPoolExecutor(maxTask, maxTask, KEEP_ALIVE, TimeUnit.SECONDS, new LinkedBlockingQueue());
+        executor = new ThreadPoolExecutor(maxTask, maxTask, KEEP_ALIVE, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
         executor.allowCoreThreadTimeOut(true);
-        singleExecutor = new ThreadPoolExecutor(1, 1, KEEP_ALIVE, TimeUnit.SECONDS, new LinkedBlockingQueue());
+        singleExecutor = new ThreadPoolExecutor(1, 1, KEEP_ALIVE, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
         singleExecutor.allowCoreThreadTimeOut(true);
         notificationManager = (NotificationManager) this.context.getSystemService(Context.NOTIFICATION_SERVICE);
         provider = new DownloadProvider(this.context);
@@ -146,8 +146,7 @@ public class DownloadEngine {
                 for (DownloadInfo info : list) {
                     infos.put(info.key, info);
                     if (info.isFinished()) continue;
-                    DownloadJob job = new DownloadJob(DownloadEngine.this, info);
-                    jobs.put(info.key, job);
+                    jobs.put(info.key, new DownloadJob(DownloadEngine.this, info));
                 }
             }
         });
@@ -168,9 +167,8 @@ public class DownloadEngine {
      */
     List<DownloadTask> getAllTasks() {
         List<DownloadTask> tasks = new ArrayList<>();
-        Iterator<DownloadJob> iterator = jobs.values().iterator();
-        while (iterator.hasNext()) {
-            tasks.add(new DownloadTask(this, iterator.next().getInfo(), null));
+        for (DownloadJob job : jobs.values()) {
+            tasks.add(new DownloadTask(this, job.info, null));
         }
         Collections.sort(tasks);
         return tasks;
@@ -190,7 +188,7 @@ public class DownloadEngine {
     }
 
     /**
-     * @param interceptor which implements method updateDownloadInfo(DownloadInfo info)
+     * @param interceptor which implements method updateDownloadInfo(DownloadInfo downloadInfo)
      */
     void addInterceptor(DownloadManager.Interceptor interceptor) {
         if (interceptor == null || interceptors.contains(interceptor)) return;
@@ -221,14 +219,12 @@ public class DownloadEngine {
 
     /**
      * prepare for the task, while creating a task, should callback the download info to the listener
-     *
-     * @param task
      */
     void prepare(DownloadTask task) {
         String key = task.key;
         if (!infos.containsKey(key)) {  // do not contain this info, means that it will create a download job
             if (task.listener == null) return;
-            task.listener.onStateChanged(key, DownloadState.STATE_UNKNOWN);
+            task.listener.onStateChanged(key, DownloadState.STATE_PREPARED);
             return;
         }
         DownloadInfo info = infos.get(key);
@@ -245,8 +241,6 @@ public class DownloadEngine {
     /**
      * if downloadJobs contains the relative job, and the job is not running, enqueue it
      * otherwise create the job and enqueue it
-     *
-     * @param task
      */
     void enqueue(DownloadTask task) {
         String key = task.key;
@@ -271,14 +265,13 @@ public class DownloadEngine {
 
     /**
      * delete the downloadJob and delete the relative info
-     *
-     * @param task
      */
     void delete(DownloadTask task) {
         String key = task.key;
         if (!jobs.containsKey(key)) return;
-        DownloadJob job = jobs.remove(task.key);
-        delete(job.getInfo());
+        DownloadJob job = jobs.remove(key);
+        job.delete();
+        delete(infos.get(key));
         if (!activeJobs.contains(job)) return;
         activeJobs.remove(job);
         updateNotification();
@@ -286,8 +279,6 @@ public class DownloadEngine {
 
     /**
      * pause the downloadJob
-     *
-     * @param task
      */
     void pause(DownloadTask task) {
         String key = task.key;
@@ -297,8 +288,6 @@ public class DownloadEngine {
 
     /**
      * resume the downloadJob if it has not been running
-     *
-     * @param task
      */
     void resume(DownloadTask task) {
         String key = task.key;
@@ -312,38 +301,30 @@ public class DownloadEngine {
 
     /**
      * delete download info, delete file
-     *
-     * @param info
      */
     void delete(final DownloadInfo info) {
         if (info == null || !infos.containsValue(info)) return;
         infos.remove(info.key);
-        if (isMainThread()) {
-            singleExecutor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    provider.delete(info);
-                    File file = new File(info.path);
-                    if (file.exists()) file.delete();
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                provider.delete(info);
+                File file = new File(info.path);
+                if (file.exists() && !file.delete()) {
+                    Log.w(TAG, "can not delete file: " + file.getPath());
                 }
-            });
-        } else {
-            provider.delete(info);
-            File file = new File(info.path);
-            if (file.exists()) file.delete();
-        }
+            }
+        });
     }
 
     /**
      * add download listener
-     *
-     * @param task
      */
     void addListener(DownloadTask task) {
         String key = task.key;
         if (!infos.containsKey(key)) {
             if (task.listener == null) return;
-            task.listener.onStateChanged(key, DownloadState.STATE_UNKNOWN);
+            task.listener.onStateChanged(key, DownloadState.STATE_PREPARED);
         } else {
             if (!jobs.containsKey(key)) {
                 if (task.listener == null) return;
@@ -356,8 +337,6 @@ public class DownloadEngine {
 
     /**
      * delete download listener
-     *
-     * @param task
      */
     void removeListener(DownloadTask task) {
         String key = task.key;
@@ -367,10 +346,8 @@ public class DownloadEngine {
 
     /**
      * notify the downloadJob has been create
-     *
-     * @param info
      */
-    void onJobCreated(DownloadInfo info) {
+    private void onJobCreated(DownloadInfo info) {
         for (DownloadJobListener downloadJobListener : downloadJobListeners) {
             downloadJobListener.onCreated(info);
         }
@@ -378,8 +355,6 @@ public class DownloadEngine {
 
     /**
      * notify the downloadJob has been started
-     *
-     * @param info
      */
     void onJobStarted(DownloadInfo info) {
         updateNotification();
@@ -390,9 +365,6 @@ public class DownloadEngine {
 
     /**
      * notify the downloadJob has been completed
-     *
-     * @param success true if the job finished
-     * @param info
      */
     void onJobCompleted(boolean success, DownloadInfo info) {
         String key = info.key;
@@ -410,7 +382,7 @@ public class DownloadEngine {
     /**
      * update the notification avoid too fast
      */
-    void updateNotification() {
+    private void updateNotification() {
         handler.removeCallbacks(updateNotificationRunnable);
         handler.postDelayed(updateNotificationRunnable, 100);
     }

@@ -23,12 +23,13 @@ import com.grocery.download.library.FileManager;
 import com.grocery.library.R;
 
 import java.util.List;
+import java.util.Locale;
 
 import static com.grocery.download.library.DownloadState.STATE_FAILED;
 import static com.grocery.download.library.DownloadState.STATE_FINISHED;
 import static com.grocery.download.library.DownloadState.STATE_PAUSED;
 import static com.grocery.download.library.DownloadState.STATE_RUNNING;
-import static com.grocery.download.library.DownloadState.STATE_UNKNOWN;
+import static com.grocery.download.library.DownloadState.STATE_PREPARED;
 import static com.grocery.download.library.DownloadState.STATE_WAITING;
 
 /**
@@ -50,7 +51,7 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
     private DownloadJobListener jobListener = new DownloadJobListener() {
         @Override
         public void onCreated(DownloadInfo info) {
-            tasks.add(0, controller.download(info.id, info.url, info.name).source(info.source).extras(info.extras).create());
+            tasks.add(0, controller.createTask(info, null));
             adapter.notifyItemInserted(0);
         }
 
@@ -70,7 +71,7 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Context context = getContext();
-        fileManager = FileManager.getInstance(context);
+        fileManager = new FileManager(context);
         controller = DownloadManager.get(context);
         controller.addDownloadJobListener(jobListener);
         tasks = controller.getAllTasks();
@@ -197,15 +198,15 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
         @Override
         public void onBindViewHolder(DownloadViewHolder holder, int position) {
             DownloadTask task = tasks.get(position);
-            holder.setKey(task.getKey());
+            holder.setKey(task.key);
             task.setListener(holder);
-            holder.name.setText(task.getName());
-            if (task.getSize() == 0) {
+            holder.name.setText(task.name);
+            if (task.size == 0) {
                 holder.size.setText(R.string.download_unknown);
             } else {
-                holder.size.setText(String.format("%.1fMB", task.getSize() / 1048576.0f));
+                holder.size.setText(String.format(Locale.US, "%.1fMB", task.size / 1048576.0f));
             }
-            String extension = fileManager.getExtension(task.getName());
+            String extension = fileManager.getExtension(task.name);
             if (fileManager.isApk(extension)) {
                 holder.icon.setImageResource(R.drawable.format_apk);
             } else if (fileManager.isMusic(extension)) {
@@ -234,7 +235,7 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
         TextView size;
         TextView status;
 
-        public DownloadViewHolder(View itemView) {
+        private DownloadViewHolder(View itemView) {
             super(itemView);
             icon = (ImageView) itemView.findViewById(R.id.download_icon);
             name = (TextView) itemView.findViewById(R.id.download_name);
@@ -254,7 +255,7 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
             final DownloadTask task = tasks.get(position);
             if (v == itemView) {
                 switch (state) {
-                    case STATE_UNKNOWN:
+                    case STATE_PREPARED:
                     case STATE_FAILED:
                         task.start();
                         break;
@@ -294,7 +295,7 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
             if (!key.equals(this.key)) return;
             this.state = state;
             switch (state) {
-                case STATE_UNKNOWN:
+                case STATE_PREPARED:
                     status.setText(R.string.label_download);
                     break;
                 case STATE_FAILED:
@@ -322,11 +323,11 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
         @Override
         public void onProgressChanged(String key, long finishedLength, long contentLength) {
             if (!key.equals(this.key)) return;
-            status.setText(String.format("%.1f%%", finishedLength * 100.f / Math.max(contentLength, 1)));
+            status.setText(String.format(Locale.US, "%.1f%%", finishedLength * 100.f / Math.max(contentLength, 1)));
             if (contentLength == 0) {
                 size.setText(R.string.download_unknown);
             } else {
-                size.setText(String.format("%.1fMB", contentLength / 1048576.0f));
+                size.setText(String.format(Locale.US, "%.1fMB", contentLength / 1048576.0f));
             }
         }
     }

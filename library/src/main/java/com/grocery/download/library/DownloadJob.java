@@ -20,12 +20,14 @@ import static com.grocery.download.library.DownloadState.STATE_WAITING;
  */
 
 // one-to-one association with DownloadInfo
-public class DownloadJob implements Runnable {
+class DownloadJob implements Runnable {
 
     private boolean isPaused;
-    private DownloadInfo info;
+    private boolean isDeleted;
     private DownloadEngine engine;
     private List<DownloadListener> listeners;
+
+    DownloadInfo info;
 
     private Runnable changeState = new Runnable() {
         @Override
@@ -34,19 +36,19 @@ public class DownloadJob implements Runnable {
                 for (DownloadListener listener : listeners) {
                     listener.onStateChanged(info.key, DownloadJob.this.info.state);
                 }
-                switch (info.state) {
-                    case STATE_RUNNING:
-                        engine.onJobStarted(info);
-                        break;
-                    case STATE_FINISHED:
-                        engine.onJobCompleted(true, info);
-                        clear();
-                        break;
-                    case STATE_FAILED:
-                    case STATE_PAUSED:
-                        engine.onJobCompleted(false, info);
-                        break;
-                }
+            }
+            switch (info.state) {
+                case STATE_RUNNING:
+                    engine.onJobStarted(info);
+                    break;
+                case STATE_FINISHED:
+                    engine.onJobCompleted(true, info);
+                    clear();
+                    break;
+                case STATE_FAILED:
+                case STATE_PAUSED:
+                    engine.onJobCompleted(false, info);
+                    break;
             }
         }
     };
@@ -62,14 +64,10 @@ public class DownloadJob implements Runnable {
         }
     };
 
-    public DownloadJob(DownloadEngine engine, DownloadInfo info) {
+    DownloadJob(DownloadEngine engine, DownloadInfo info) {
         this.engine = engine;
         this.info = info;
         this.listeners = new ArrayList<>();
-    }
-
-    DownloadInfo getInfo() {
-        return info;
     }
 
     void addListener(DownloadListener listener) {
@@ -101,6 +99,10 @@ public class DownloadJob implements Runnable {
         onStateChanged(STATE_PAUSED, false);
     }
 
+    void delete() {
+        isDeleted = true;
+    }
+
     void resume() {
         if (isRunning()) return;
         onStateChanged(STATE_WAITING, false);
@@ -129,7 +131,10 @@ public class DownloadJob implements Runnable {
     }
 
     private boolean prepare() {
-        if (isPaused) {
+        if (isDeleted) {
+            clear();
+            return false;
+        } else if (isPaused) {
             onStateChanged(STATE_PAUSED, false);
             if (!engine.provider.exists(info)) {
                 engine.provider.insert(info);
@@ -180,19 +185,20 @@ public class DownloadJob implements Runnable {
                 byte[] buffer = new byte[20480];
                 int len;
                 long bytesRead = finishedLength;
-                while (!this.isPaused && (len = inputStream.read(buffer)) != -1) {
+                while (!this.isDeleted && !this.isPaused && (len = inputStream.read(buffer)) != -1) {
                     randomAccessFile.write(buffer, 0, len);
                     bytesRead += len;
                     finishedLength = bytesRead;
                     onProgressChanged(finishedLength, contentLength);
                 }
                 connection.disconnect();
-                if (this.isPaused) {
+                if (isDeleted) {
+                    clear();
+                } else if (this.isPaused) {
                     onStateChanged(STATE_PAUSED, true);
                 } else {
                     info.finishTime = System.currentTimeMillis();
                     onStateChanged(STATE_FINISHED, true);
-                    return;
                 }
             } else {
                 onStateChanged(STATE_FAILED, true);
@@ -206,6 +212,7 @@ public class DownloadJob implements Runnable {
                 if (inputStream != null)
                     inputStream.close();
             } catch (IOException e) {
+                e.printStackTrace();
             }
             if (connection != null)
                 connection.disconnect();

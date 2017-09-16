@@ -11,8 +11,9 @@ import java.io.InputStream;
  * Created by 4ndroidev on 17/4/20.
  */
 
-public class AssetsHelper {
-    public static String readAsString(Context context, String name) {
+class AssetsHelper {
+
+    static String readAsString(Context context, String name) {
         AssetManager assetManager = context.getAssets();
         InputStream is = null;
         ByteArrayOutputStream baos = null;
@@ -26,6 +27,7 @@ public class AssetsHelper {
             }
             return new String(baos.toByteArray());
         } catch (IOException e) {
+            e.printStackTrace();
         } finally {
             try {
                 if (baos != null) {
@@ -35,7 +37,7 @@ public class AssetsHelper {
                     is.close();
                 }
             } catch (IOException e) {
-
+                e.printStackTrace();
             }
         }
         return null;

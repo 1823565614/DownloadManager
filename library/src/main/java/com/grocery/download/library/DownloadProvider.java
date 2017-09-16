@@ -12,15 +12,15 @@ import java.util.List;
 /**
  * Created by 4ndroidev on 16/10/7.
  */
-public class DownloadProvider {
+class DownloadProvider {
 
     private DatabaseHelper helper;
 
-    public DownloadProvider(Context context) {
+    DownloadProvider(Context context) {
         helper = new DatabaseHelper(context);
     }
 
-    public boolean insert(DownloadInfo info) {
+    boolean insert(DownloadInfo info) {
         if (info == null) return false;
         synchronized (DownloadProvider.class) {
             SQLiteDatabase database = helper.getWritableDatabase();
@@ -43,7 +43,7 @@ public class DownloadProvider {
         }
     }
 
-    public boolean delete(DownloadInfo info) {
+    boolean delete(DownloadInfo info) {
         if (info == null) return false;
         synchronized (DownloadProvider.class) {
             SQLiteDatabase database = helper.getWritableDatabase();
@@ -55,7 +55,7 @@ public class DownloadProvider {
         }
     }
 
-    public List<DownloadInfo> query() {
+    List<DownloadInfo> query() {
         synchronized (DownloadProvider.class) {
             List<DownloadInfo> result = new ArrayList<>();
             SQLiteDatabase database = helper.getReadableDatabase();
@@ -99,7 +99,7 @@ public class DownloadProvider {
         }
     }
 
-    public boolean update(DownloadInfo info) {
+    boolean update(DownloadInfo info) {
         if (info == null) return false;
         synchronized (DownloadProvider.class) {
             SQLiteDatabase database = helper.getReadableDatabase();
@@ -123,7 +123,7 @@ public class DownloadProvider {
         }
     }
 
-    public boolean exists(DownloadInfo info) {
+    boolean exists(DownloadInfo info) {
         if (info == null) return false;
         synchronized (DownloadProvider.class) {
             SQLiteDatabase database = helper.getReadableDatabase();
@@ -158,10 +158,10 @@ public class DownloadProvider {
         static final String COLUMN_STATE = "state";
 
         private static final String DB_NAME = "download";
-        public static final String TABLE_NAME = "download";
+        private static final String TABLE_NAME = "download";
         private static final int DB_VERSION = 1;
 
-        public DatabaseHelper(Context context) {
+        DatabaseHelper(Context context) {
             super(context, DB_NAME, null, DB_VERSION);
         }
 

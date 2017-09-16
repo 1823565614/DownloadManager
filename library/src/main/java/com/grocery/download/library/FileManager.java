@@ -15,27 +15,16 @@ import java.io.File;
  */
 public class FileManager {
 
-    private static FileManager instance;
     private Context context;
 
-    private FileManager(Context context) {
+    public FileManager(Context context) {
         this.context = context;
-    }
-
-    public static FileManager getInstance(Context context) {
-        if (instance == null) {
-            synchronized (FileManager.class) {
-                instance = new FileManager(context.getApplicationContext());
-            }
-        }
-        return instance;
     }
 
     public String getExtension(String path) {
         int index = path.lastIndexOf(".");
         if (index == -1 || index == path.length() - 1) return "unknown";
-        String extension = path.substring(index + 1).toLowerCase();
-        return extension;
+        return path.substring(index + 1).toLowerCase();
     }
 
     public boolean isApk(String extension) {
@@ -98,7 +87,7 @@ public class FileManager {
     }
 
 
-    public void install(String path) {
+    private void install(String path) {
         if (TextUtils.isEmpty(path)) return;
         File file = new File(path);
         if (!file.exists()) return;

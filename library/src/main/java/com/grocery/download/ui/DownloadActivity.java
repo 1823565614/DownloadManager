@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
@@ -20,11 +21,7 @@ import java.util.List;
  */
 public class DownloadActivity extends AppCompatActivity {
 
-    private TabLayout tabLayout;
     private ViewPager viewPager;
-
-    private DownloadedFragment downloadedFragment;
-    private DownloadingFragment downloadingFragment;
 
     private List<PageInfo> pages = new ArrayList<>();
 
@@ -39,12 +36,14 @@ public class DownloadActivity extends AppCompatActivity {
     public void initContentView() {
         Resources resources = getResources();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().setStatusBarColor(resources.getColor(R.color.colorPrimary));
+            getWindow().setStatusBarColor(ResourcesCompat.getColor(resources, R.color.colorPrimary, getTheme()));
         }
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
         setTitle(R.string.title_download);
-        downloadingFragment = new DownloadingFragment();
-        downloadedFragment = new DownloadedFragment();
+        DownloadingFragment downloadingFragment = new DownloadingFragment();
+        DownloadedFragment downloadedFragment = new DownloadedFragment();
         pages.add(new PageInfo(resources.getString(R.string.download_title_downloading), downloadingFragment));
         pages.add(new PageInfo(resources.getString(R.string.download_title_downloaded), downloadedFragment));
         viewPager = (ViewPager) findViewById(R.id.download_viewpager);
@@ -64,8 +63,7 @@ public class DownloadActivity extends AppCompatActivity {
                 return pages.get(position).title;
             }
         });
-        tabLayout = (TabLayout) findViewById(R.id.download_tabs);
-        tabLayout.setupWithViewPager(viewPager);
+        ((TabLayout) findViewById(R.id.download_tabs)).setupWithViewPager(viewPager);
     }
 
     @Override
@@ -90,7 +88,7 @@ public class DownloadActivity extends AppCompatActivity {
         String title;
         Fragment fragment;
 
-        public PageInfo(String title, Fragment fragment) {
+        private PageInfo(String title, Fragment fragment) {
             this.title = title;
             this.fragment = fragment;
         }

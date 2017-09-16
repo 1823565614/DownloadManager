@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by 4ndroidev on 16/10/17.
@@ -76,7 +77,7 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
         super.onCreate(savedInstanceState);
         downloads = new ArrayList<>();
         Context context = getContext();
-        fileManager = FileManager.getInstance(context);
+        fileManager = new FileManager(context);
         controller = DownloadManager.get(context);
         controller.addDownloadJobListener(jobListener);
         List<DownloadInfo> infos = controller.getAllInfo();
@@ -200,7 +201,7 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
     private class DownloadAdapter extends RecyclerView.Adapter<DownloadViewHolder> {
 
         private LayoutInflater inflater = LayoutInflater.from(getContext());
-        private SimpleDateFormat format = new SimpleDateFormat(getResources().getString(R.string.download_date_format));
+        private SimpleDateFormat format = new SimpleDateFormat(getResources().getString(R.string.download_date_format), Locale.CHINA);
         private List<Boolean> checks;
 
         @Override
@@ -228,7 +229,7 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
             DownloadInfo info = downloads.get(position);
             holder.name.setText(info.name);
             holder.timestamp.setText(format.format(new Date(info.createTime)));
-            holder.size.setText(String.format("%.1fMB", info.contentLength / 1048576.0f));
+            holder.size.setText(String.format(Locale.US, "%.1fMB", info.contentLength / 1048576.0f));
             String extension = fileManager.getExtension(info.name);
             if (fileManager.isApk(extension)) {
                 holder.icon.setImageResource(R.drawable.format_apk);
@@ -293,7 +294,7 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
         }
 
         private List<DownloadInfo> getSelections() {
-            if (!isEditMode) return Collections.EMPTY_LIST;
+            if (!isEditMode) return new ArrayList<>();
             List<DownloadInfo> result = new ArrayList<>();
             for (int i = 0, count = getItemCount(); i < count; i++) {
                 if (checks.get(i)) result.add(downloads.get(i));
@@ -316,7 +317,7 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
         TextView timestamp;
         View close;
 
-        public DownloadViewHolder(View itemView) {
+        DownloadViewHolder(View itemView) {
             super(itemView);
             check = (CheckBox) itemView.findViewById(R.id.download_checkbox);
             icon = (ImageView) itemView.findViewById(R.id.download_icon);

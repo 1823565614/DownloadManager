@@ -2,7 +2,6 @@ package com.grocery.download.library;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 
 import com.grocery.download.ui.DownloadActivity;
 
@@ -17,54 +16,26 @@ public class DownloadManager {
 
     private final static int MAX_TASK_COUNT = 3;
 
-    private Context context;
     private DownloadEngine engine;
     private static DownloadManager instance;
-    private DownloadJobListener listener = new DownloadJobListener() {
-        @Override
-        public void onCreated(DownloadInfo info) {
-        }
-
-        @Override
-        public void onStarted(DownloadInfo info) {
-        }
-
-        @Override
-        public void onCompleted(boolean success, DownloadInfo info) {
-            if (!success || info == null) return;
-            FileManager fileManager = FileManager.getInstance(context);
-            String extension = fileManager.getExtension(info.key);
-            if (fileManager.isApk(extension)) {
-//                FileManager.getInstance(context).install(info.path);
-            } else if (fileManager.isMusic(extension)) {
-                context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + info.path)));
-            }
-        }
-    };
 
     private DownloadManager(Context context) {
-        this.context = context;
         engine = new DownloadEngine(context, MAX_TASK_COUNT);
-        engine.addDownloadJobListener(listener);
     }
 
     public void initialize() {
         engine.initialize();
     }
 
-    public static DownloadManager get(Context context) {
+    public synchronized static DownloadManager get(Context context) {
         if (instance == null) {
-            synchronized (DownloadManager.class) {
-                Context applicationContext = context.getApplicationContext();
-                instance = new DownloadManager(applicationContext);
-            }
+            instance = new DownloadManager(context.getApplicationContext());
         }
         return instance;
     }
 
     public void destroy() {
         Assert.assertNotNull(engine);
-        engine.removeDownloadJobListener(listener);
         engine.destroy();
         engine = null;
         instance = null;
@@ -77,9 +48,13 @@ public class DownloadManager {
     }
 
 
-    public DownloadTask.Builder download(long id, String url, String name) {
+    public DownloadTask.Builder newTask(long id, String url, String name) {
         Assert.assertNotNull(engine);
         return new DownloadTask.Builder(engine).id(id).url(url).name(name);
+    }
+
+    public DownloadTask createTask(DownloadInfo info, DownloadListener listener) {
+        return new DownloadTask(engine, info, listener);
     }
 
     public void addInterceptor(Interceptor interceptor) {
@@ -116,11 +91,8 @@ public class DownloadManager {
         return engine.isActive();
     }
 
-
-    public interface Interceptor {
-
+    interface Interceptor {
         void updateDownloadInfo(DownloadInfo info);
-
     }
 
 }

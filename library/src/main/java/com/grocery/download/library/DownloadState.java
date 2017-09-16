@@ -5,7 +5,7 @@ package com.grocery.download.library;
  */
 public class DownloadState {
 
-    public static final int STATE_UNKNOWN = 0;
+    public static final int STATE_PREPARED = 0;
     public static final int STATE_RUNNING = 1;
     public static final int STATE_FINISHED = 2;
     public static final int STATE_FAILED = 3;

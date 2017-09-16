@@ -1,5 +1,7 @@
 package com.grocery.download.library;
 
+import android.support.annotation.NonNull;
+
 /**
  * Created by 4ndroidev on 16/10/7.
  */
@@ -21,11 +23,11 @@ public class DownloadInfo implements Comparable<DownloadInfo> {
     public String source;
     public String extras;
 
-    public DownloadInfo() {
+    DownloadInfo() {
         this.createTime = System.currentTimeMillis();
     }
 
-    public DownloadInfo(long id, String key, String url, String name, String path, String source, String extras) {
+    DownloadInfo(long id, String key, String url, String name, String path, String source, String extras) {
         this.id = id;
         this.key = key;
         this.url = url;
@@ -41,8 +43,7 @@ public class DownloadInfo implements Comparable<DownloadInfo> {
     }
 
     @Override
-    public int compareTo(DownloadInfo another) {
-        if (another == null) return 0;
+    public int compareTo(@NonNull DownloadInfo another) {
         long diff = finishTime - another.finishTime;
         return diff == 0 ? 0 : diff > 0 ? -1 : 1;
     }

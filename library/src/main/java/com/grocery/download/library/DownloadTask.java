@@ -1,5 +1,7 @@
 package com.grocery.download.library;
 
+import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import java.io.File;
@@ -16,18 +18,19 @@ import java.io.File;
 
 public class DownloadTask implements Comparable<DownloadTask> {
 
+    private static final String DOWNLOAD_PATH = Environment.getExternalStorageDirectory().getPath() + File.separator + "Download";
+
     private DownloadEngine engine;
 
-    long id;
-    long size;
-    long createTime;
-
-    String key;
-    String url;
-    String name;
-    String path;
-    String source;
-    String extras;
+    public String key;
+    public long size;
+    public long createTime;
+    public long id;
+    public String url;
+    public String name;
+    public String path;
+    public String source;
+    public String extras;
     DownloadListener listener;
 
     private DownloadTask(DownloadEngine engine, long id, String url, String name, String source, String extras, DownloadListener listener) {
@@ -35,7 +38,7 @@ public class DownloadTask implements Comparable<DownloadTask> {
         this.id = id;
         this.url = url;
         this.name = name;
-        this.path = DownloadEngine.DOWNLOAD_PATH + File.separator + name;
+        this.path = DOWNLOAD_PATH + File.separator + name;
         this.source = source;
         this.key = generateKey();
         this.extras = extras;
@@ -43,7 +46,7 @@ public class DownloadTask implements Comparable<DownloadTask> {
         this.engine.prepare(this);
     }
 
-    public DownloadTask(DownloadEngine engine, DownloadInfo info, DownloadListener listener) {
+    DownloadTask(DownloadEngine engine, DownloadInfo info, DownloadListener listener) {
         this.engine = engine;
         this.id = info.id;
         this.url = info.url;
@@ -68,44 +71,7 @@ public class DownloadTask implements Comparable<DownloadTask> {
     }
 
     DownloadInfo generateInfo() {
-        DownloadInfo info = new DownloadInfo(id, key, url, name, path, source, extras);
-        return info;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public long getSize() {
-        return size;
-    }
-
-    public long getCreateTime() {
-        return createTime;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public String getExtras() {
-        return extras;
+        return new DownloadInfo(id, key, url, name, path, source, extras);
     }
 
     public void start() {
@@ -154,8 +120,7 @@ public class DownloadTask implements Comparable<DownloadTask> {
     }
 
     @Override
-    public int compareTo(DownloadTask other) {
-        if (other == null) return 0;
+    public int compareTo(@NonNull DownloadTask other) {
         long diff = createTime - other.createTime;
         return diff == 0 ? 0 : diff > 0 ? 1 : -1;
     }
@@ -169,7 +134,7 @@ public class DownloadTask implements Comparable<DownloadTask> {
         private String extras;
         private DownloadListener listener;
 
-        public Builder(DownloadEngine engine) {
+        Builder(DownloadEngine engine) {
             this.engine = engine;
         }
 
