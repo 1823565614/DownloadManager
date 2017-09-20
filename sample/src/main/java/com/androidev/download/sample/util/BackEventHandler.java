@@ -1,4 +1,4 @@
-package com.grocery.download.ui;
+package com.androidev.download.sample.util;
 
 /**
  * Created by 4ndroidev on 16/10/20.

@@ -1,5 +1,6 @@
-package com.grocery.download;
+package com.androidev.download.sample.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
@@ -14,10 +15,12 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.androidev.download.DownloadListener;
+import com.androidev.download.DownloadManager;
+import com.androidev.download.DownloadTask;
+import com.androidev.download.sample.R;
+import com.androidev.download.sample.util.AssetsHelper;
 import com.bumptech.glide.Glide;
-import com.grocery.download.library.DownloadListener;
-import com.grocery.download.library.DownloadManager;
-import com.grocery.download.library.DownloadTask;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -27,12 +30,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import static com.grocery.download.library.DownloadState.STATE_FAILED;
-import static com.grocery.download.library.DownloadState.STATE_FINISHED;
-import static com.grocery.download.library.DownloadState.STATE_PAUSED;
-import static com.grocery.download.library.DownloadState.STATE_RUNNING;
-import static com.grocery.download.library.DownloadState.STATE_PREPARED;
-import static com.grocery.download.library.DownloadState.STATE_WAITING;
+import static com.androidev.download.DownloadState.STATE_FAILED;
+import static com.androidev.download.DownloadState.STATE_FINISHED;
+import static com.androidev.download.DownloadState.STATE_PAUSED;
+import static com.androidev.download.DownloadState.STATE_PREPARED;
+import static com.androidev.download.DownloadState.STATE_RUNNING;
+import static com.androidev.download.DownloadState.STATE_WAITING;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -50,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initialize() {
-        DownloadManager controller = DownloadManager.get(this);
+        DownloadManager controller = DownloadManager.getInstance();
         tasks = new ArrayList<>();
         String data = AssetsHelper.readAsString(this, "data.json");
         try {
@@ -100,7 +103,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_download) {
-            DownloadManager.gotoDownload(this);
+            Intent intent = new Intent();
+            intent.setClass(this, DownloadActivity.class);
+            startActivity(intent);
             return true;
         }
         return super.onOptionsItemSelected(item);

@@ -1,4 +1,4 @@
-package com.grocery.download.ui;
+package com.androidev.download.sample.fragment;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -14,23 +14,23 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.grocery.download.library.DownloadInfo;
-import com.grocery.download.library.DownloadJobListener;
-import com.grocery.download.library.DownloadListener;
-import com.grocery.download.library.DownloadManager;
-import com.grocery.download.library.DownloadTask;
-import com.grocery.download.library.FileManager;
-import com.grocery.library.R;
+import com.androidev.download.DownloadInfo;
+import com.androidev.download.DownloadJobListener;
+import com.androidev.download.DownloadListener;
+import com.androidev.download.DownloadManager;
+import com.androidev.download.DownloadTask;
+import com.androidev.download.sample.R;
+import com.androidev.download.sample.util.FileManager;
 
 import java.util.List;
 import java.util.Locale;
 
-import static com.grocery.download.library.DownloadState.STATE_FAILED;
-import static com.grocery.download.library.DownloadState.STATE_FINISHED;
-import static com.grocery.download.library.DownloadState.STATE_PAUSED;
-import static com.grocery.download.library.DownloadState.STATE_RUNNING;
-import static com.grocery.download.library.DownloadState.STATE_PREPARED;
-import static com.grocery.download.library.DownloadState.STATE_WAITING;
+import static com.androidev.download.DownloadState.STATE_FAILED;
+import static com.androidev.download.DownloadState.STATE_FINISHED;
+import static com.androidev.download.DownloadState.STATE_PAUSED;
+import static com.androidev.download.DownloadState.STATE_PREPARED;
+import static com.androidev.download.DownloadState.STATE_RUNNING;
+import static com.androidev.download.DownloadState.STATE_WAITING;
 
 /**
  * Created by 4ndroidev on 16/10/17.
@@ -45,13 +45,13 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
     private DownloadAdapter adapter;
     private RecyclerView recyclerView;
     private List<DownloadTask> tasks;
-    private DownloadManager controller;
+    private DownloadManager manager;
     private FileManager fileManager;
 
     private DownloadJobListener jobListener = new DownloadJobListener() {
         @Override
         public void onCreated(DownloadInfo info) {
-            tasks.add(0, controller.createTask(info, null));
+            tasks.add(0, manager.createTask(info, null));
             adapter.notifyItemInserted(0);
         }
 
@@ -61,7 +61,7 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
         }
 
         @Override
-        public void onCompleted(boolean success, DownloadInfo info) {
+        public void onCompleted(boolean finished, DownloadInfo info) {
             updateUI();
         }
 
@@ -72,9 +72,9 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
         super.onCreate(savedInstanceState);
         Context context = getContext();
         fileManager = new FileManager(context);
-        controller = DownloadManager.get(context);
-        controller.addDownloadJobListener(jobListener);
-        tasks = controller.getAllTasks();
+        manager = DownloadManager.getInstance();
+        manager.addDownloadJobListener(jobListener);
+        tasks = manager.getAllTasks();
     }
 
     @Override
@@ -118,7 +118,7 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
     @Override
     public void onDestroy() {
         super.onDestroy();
-        controller.removeDownloadJobListener(jobListener);
+        manager.removeDownloadJobListener(jobListener);
         for (DownloadTask task : tasks) {
             task.clear();
         }
@@ -133,7 +133,7 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
             if (header.getVisibility() != View.VISIBLE) header.setVisibility(View.VISIBLE);
             if (recyclerView.getVisibility() != View.VISIBLE)
                 recyclerView.setVisibility(View.VISIBLE);
-            boolean isActive = controller.isActive();
+            boolean isActive = manager.isActive();
             if (isActive) {
                 operationIcon.setImageResource(R.drawable.list_icon_pause);
                 operationText.setText(R.string.download_pause_all);
@@ -153,7 +153,7 @@ public class DownloadingFragment extends Fragment implements View.OnClickListene
     public void onClick(View v) {
         int id = v.getId();
         if (R.id.download_operation == id) {
-            if (controller.isActive()) {
+            if (manager.isActive()) {
                 for (DownloadTask task : tasks) {
                     task.pause();
                 }

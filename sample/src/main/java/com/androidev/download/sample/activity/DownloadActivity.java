@@ -1,4 +1,4 @@
-package com.grocery.download.ui;
+package com.androidev.download.sample.activity;
 
 import android.content.res.Resources;
 import android.os.Build;
@@ -11,7 +11,11 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
-import com.grocery.library.R;
+import com.androidev.download.sample.R;
+import com.androidev.download.sample.fragment.DownloadedFragment;
+import com.androidev.download.sample.fragment.DownloadingFragment;
+import com.androidev.download.sample.util.BackEventHandler;
+import com.androidev.download.sample.widget.SwipeBackLayout;
 
 import java.util.ArrayList;
 import java.util.List;

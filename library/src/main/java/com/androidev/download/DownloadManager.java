@@ -1,9 +1,6 @@
-package com.grocery.download.library;
+package com.androidev.download;
 
 import android.content.Context;
-import android.content.Intent;
-
-import com.grocery.download.ui.DownloadActivity;
 
 import junit.framework.Assert;
 
@@ -14,39 +11,31 @@ import java.util.List;
  */
 public class DownloadManager {
 
-    private final static int MAX_TASK_COUNT = 3;
+    public final static String INTENT_ACTION_DOWNLOAD = "com.androidev.download";
+
+    private static class DownloadManagerHolder {
+        private static DownloadManager instance = new DownloadManager();
+    }
 
     private DownloadEngine engine;
-    private static DownloadManager instance;
 
-    private DownloadManager(Context context) {
-        engine = new DownloadEngine(context, MAX_TASK_COUNT);
+    private DownloadManager() {
     }
 
-    public void initialize() {
-        engine.initialize();
+    public void initialize(Context context, int masTask) {
+        engine = new DownloadEngine(masTask);
+        engine.initialize(context);
     }
 
-    public synchronized static DownloadManager get(Context context) {
-        if (instance == null) {
-            instance = new DownloadManager(context.getApplicationContext());
-        }
-        return instance;
+    public static DownloadManager getInstance() {
+        return DownloadManagerHolder.instance;
     }
 
     public void destroy() {
         Assert.assertNotNull(engine);
         engine.destroy();
         engine = null;
-        instance = null;
     }
-
-    public static void gotoDownload(Context context) {
-        Intent intent = new Intent();
-        intent.setClass(context, DownloadActivity.class);
-        context.startActivity(intent);
-    }
-
 
     public DownloadTask.Builder newTask(long id, String url, String name) {
         Assert.assertNotNull(engine);
@@ -72,6 +61,11 @@ public class DownloadManager {
         engine.removeDownloadJobListener(downloadJobListener);
     }
 
+    public void setDownloadNotifier(DownloadNotifier downloadNotifier) {
+        Assert.assertNotNull(engine);
+        engine.setDownloadNotifier(downloadNotifier);
+    }
+
     public List<DownloadTask> getAllTasks() {
         Assert.assertNotNull(engine);
         return engine.getAllTasks();
@@ -91,7 +85,7 @@ public class DownloadManager {
         return engine.isActive();
     }
 
-    interface Interceptor {
+    public interface Interceptor {
         void updateDownloadInfo(DownloadInfo info);
     }
 

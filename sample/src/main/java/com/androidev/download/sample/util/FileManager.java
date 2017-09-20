@@ -1,4 +1,4 @@
-package com.grocery.download.library;
+package com.androidev.download.sample.util;
 
 import android.content.Context;
 import android.content.Intent;
@@ -6,7 +6,7 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.widget.Toast;
 
-import com.grocery.library.R;
+import com.androidev.download.sample.R;
 
 import java.io.File;
 

@@ -1,4 +1,4 @@
-package com.grocery.download.library;
+package com.androidev.download;
 
 /**
  * Created by 4ndroidev on 16/10/18.
@@ -6,5 +6,5 @@ package com.grocery.download.library;
 public interface DownloadJobListener {
     void onCreated(DownloadInfo info);
     void onStarted(DownloadInfo info);
-    void onCompleted(boolean success, DownloadInfo info);
+    void onCompleted(boolean finished, DownloadInfo info);
 }

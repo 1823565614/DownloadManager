@@ -1,4 +1,4 @@
-package com.grocery.download.library;
+package com.androidev.download;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,12 +8,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.grocery.download.library.DownloadState.STATE_FAILED;
-import static com.grocery.download.library.DownloadState.STATE_FINISHED;
-import static com.grocery.download.library.DownloadState.STATE_PAUSED;
-import static com.grocery.download.library.DownloadState.STATE_RUNNING;
-import static com.grocery.download.library.DownloadState.STATE_WAITING;
 
 /**
  * Created by 4ndroidev on 16/10/6.
@@ -38,15 +32,15 @@ class DownloadJob implements Runnable {
                 }
             }
             switch (info.state) {
-                case STATE_RUNNING:
+                case DownloadState.STATE_RUNNING:
                     engine.onJobStarted(info);
                     break;
-                case STATE_FINISHED:
+                case DownloadState.STATE_FINISHED:
                     engine.onJobCompleted(true, info);
                     clear();
                     break;
-                case STATE_FAILED:
-                case STATE_PAUSED:
+                case DownloadState.STATE_FAILED:
+                case DownloadState.STATE_PAUSED:
                     engine.onJobCompleted(false, info);
                     break;
             }
@@ -86,7 +80,7 @@ class DownloadJob implements Runnable {
     }
 
     boolean isRunning() {
-        return STATE_RUNNING == info.state;
+        return DownloadState.STATE_RUNNING == info.state;
     }
 
     void enqueue() {
@@ -95,8 +89,8 @@ class DownloadJob implements Runnable {
 
     void pause() {
         isPaused = true;
-        if (info.state != STATE_WAITING) return;
-        onStateChanged(STATE_PAUSED, false);
+        if (info.state != DownloadState.STATE_WAITING) return;
+        onStateChanged(DownloadState.STATE_PAUSED, false);
     }
 
     void delete() {
@@ -105,7 +99,7 @@ class DownloadJob implements Runnable {
 
     void resume() {
         if (isRunning()) return;
-        onStateChanged(STATE_WAITING, false);
+        onStateChanged(DownloadState.STATE_WAITING, false);
         isPaused = false;
         engine.executor.submit(this);
     }
@@ -135,7 +129,7 @@ class DownloadJob implements Runnable {
             clear();
             return false;
         } else if (isPaused) {
-            onStateChanged(STATE_PAUSED, false);
+            onStateChanged(DownloadState.STATE_PAUSED, false);
             if (!engine.provider.exists(info)) {
                 engine.provider.insert(info);
             } else {
@@ -143,7 +137,7 @@ class DownloadJob implements Runnable {
             }
             return false;
         } else {
-            onStateChanged(STATE_RUNNING, false);
+            onStateChanged(DownloadState.STATE_RUNNING, false);
             onProgressChanged(info.finishedLength, info.contentLength);
             if (engine.interceptors != null) {
                 for (DownloadManager.Interceptor interceptor : engine.interceptors) {
@@ -195,16 +189,16 @@ class DownloadJob implements Runnable {
                 if (isDeleted) {
                     clear();
                 } else if (this.isPaused) {
-                    onStateChanged(STATE_PAUSED, true);
+                    onStateChanged(DownloadState.STATE_PAUSED, true);
                 } else {
                     info.finishTime = System.currentTimeMillis();
-                    onStateChanged(STATE_FINISHED, true);
+                    onStateChanged(DownloadState.STATE_FINISHED, true);
                 }
             } else {
-                onStateChanged(STATE_FAILED, true);
+                onStateChanged(DownloadState.STATE_FAILED, true);
             }
         } catch (final Exception e) {
-            onStateChanged(STATE_FAILED, true);
+            onStateChanged(DownloadState.STATE_FAILED, true);
         } finally {
             try {
                 if (randomAccessFile != null)

@@ -1,4 +1,4 @@
-package com.grocery.download;
+package com.androidev.download.sample.util;
 
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -11,9 +11,9 @@ import java.io.InputStream;
  * Created by 4ndroidev on 17/4/20.
  */
 
-class AssetsHelper {
+public class AssetsHelper {
 
-    static String readAsString(Context context, String name) {
+    public static String readAsString(Context context, String name) {
         AssetManager assetManager = context.getAssets();
         InputStream is = null;
         ByteArrayOutputStream baos = null;

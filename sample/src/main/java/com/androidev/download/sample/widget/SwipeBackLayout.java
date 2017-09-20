@@ -1,4 +1,4 @@
-package com.grocery.download.ui;
+package com.androidev.download.sample.widget;
 
 import android.app.Activity;
 import android.graphics.Color;

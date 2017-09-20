@@ -1,4 +1,4 @@
-package com.grocery.download.ui;
+package com.androidev.download.sample.fragment;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -17,11 +17,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.grocery.download.library.DownloadInfo;
-import com.grocery.download.library.DownloadJobListener;
-import com.grocery.download.library.DownloadManager;
-import com.grocery.download.library.FileManager;
-import com.grocery.library.R;
+import com.androidev.download.DownloadInfo;
+import com.androidev.download.DownloadJobListener;
+import com.androidev.download.DownloadManager;
+import com.androidev.download.sample.R;
+import com.androidev.download.sample.util.BackEventHandler;
+import com.androidev.download.sample.util.FileManager;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -41,13 +42,11 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
     private View footer;
     private View contentView;
     private TextView summary;
-    private ImageView manager;
-    private TextView delete;
     private TextView select;
     private DownloadAdapter adapter;
     private RecyclerView recyclerView;
     private List<DownloadInfo> downloads;
-    private DownloadManager controller;
+    private DownloadManager manager;
     private FileManager fileManager;
 
     private DownloadJobListener jobListener = new DownloadJobListener() {
@@ -62,8 +61,8 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
         }
 
         @Override
-        public void onCompleted(boolean success, DownloadInfo info) {
-            if (success) {
+        public void onCompleted(boolean finished, DownloadInfo info) {
+            if (finished) {
                 downloads.add(0, info);
                 if (isEditMode) adapter.checks.add(0, false);
                 adapter.notifyItemInserted(0);
@@ -78,9 +77,9 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
         downloads = new ArrayList<>();
         Context context = getContext();
         fileManager = new FileManager(context);
-        controller = DownloadManager.get(context);
-        controller.addDownloadJobListener(jobListener);
-        List<DownloadInfo> infos = controller.getAllInfo();
+        manager = DownloadManager.getInstance();
+        manager.addDownloadJobListener(jobListener);
+        List<DownloadInfo> infos = manager.getAllInfo();
         for (DownloadInfo info : infos) {
             if (!info.isFinished()) continue;
             downloads.add(info);
@@ -96,13 +95,11 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
         header = contentView.findViewById(R.id.download_header);
         footer = contentView.findViewById(R.id.download_footer);
         summary = (TextView) contentView.findViewById(R.id.download_summary);
-        manager = (ImageView) contentView.findViewById(R.id.download_manager);
         select = (TextView) contentView.findViewById(R.id.download_select);
-        delete = (TextView) contentView.findViewById(R.id.download_delete);
         recyclerView = (RecyclerView) contentView.findViewById(R.id.download_recycler_view);
-        manager.setOnClickListener(this);
         select.setOnClickListener(this);
-        delete.setOnClickListener(this);
+        contentView.findViewById(R.id.download_delete).setOnClickListener(this);
+        contentView.findViewById(R.id.download_manager).setOnClickListener(this);
         LinearLayoutManager layoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
         RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(context, layoutManager.getOrientation());
         recyclerView.addItemDecoration(itemDecoration);
@@ -116,7 +113,7 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
     @Override
     public void onDestroy() {
         super.onDestroy();
-        controller.removeDownloadJobListener(jobListener);
+        manager.removeDownloadJobListener(jobListener);
         downloads.clear();
     }
 
@@ -172,7 +169,7 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        for (DownloadInfo info : selections) controller.delete(info);
+                        for (DownloadInfo info : selections) manager.delete(info);
                         downloads.removeAll(selections);
                         exitEditMode();
                         updateUI();
@@ -346,7 +343,7 @@ public class DownloadedFragment extends Fragment implements View.OnClickListener
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 DownloadInfo info = downloads.get(position);
-                                controller.delete(info);
+                                manager.delete(info);
                                 downloads.remove(info);
                                 adapter.notifyItemRemoved(position);
                                 updateUI();

@@ -1,17 +1,9 @@
-package com.grocery.download.library;
+package com.androidev.download;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
-import android.content.res.Resources;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-
-import com.grocery.download.ui.DownloadActivity;
-import com.grocery.library.R;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -32,15 +24,13 @@ class DownloadEngine {
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int CORE_POOL_SIZE = CPU_COUNT + 1;
     private static final int KEEP_ALIVE = 10;
-    private static final int NOTIFY_ID = 10000;
-    private static final int REQUEST_CODE = 100;
+
 
     /**
      * observes job lifecycle: onJobCreated, onJobStarted, onJobCompleted
      */
     private List<DownloadJobListener> downloadJobListeners;
 
-    private NotificationManager notificationManager;
 
     /**
      * record all jobs those are not completed
@@ -53,9 +43,14 @@ class DownloadEngine {
     private Map<String, DownloadInfo> infos;
 
     /**
-     * record all active jobs in order for notification, some jobs are created, but not running
+     * record all active info in order for notification
      */
-    private List<DownloadJob> activeJobs;
+    private List<DownloadInfo> activeInfos;
+
+    /**
+     * show download notifications
+     */
+    private DownloadNotifier notifier;
 
     /**
      * update notification
@@ -63,37 +58,7 @@ class DownloadEngine {
     private Runnable updateNotificationRunnable = new Runnable() {
         @Override
         public void run() {
-            int activeCount = activeJobs.size();
-            if (activeCount == 0) {
-                notificationManager.cancel(NOTIFY_ID);
-            } else {
-                Notification.Builder builder = new Notification.Builder(context);
-                Intent intent = new Intent();
-                intent.setClass(context, DownloadActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                PendingIntent downloadIntent = PendingIntent.getActivity(context, REQUEST_CODE, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-                Resources resources = context.getResources();
-                String title = resources.getString(R.string.download_notification_title);
-                String summary = resources.getString(R.string.download_notification_summary, activeCount);
-                builder.setSmallIcon(R.drawable.notify_download)
-                        .setPriority(Notification.PRIORITY_MAX)
-                        .setContentTitle(title)
-                        .setContentText(summary)
-                        .setWhen(System.currentTimeMillis())
-                        .setContentIntent(downloadIntent)
-                        .setOngoing(true);
-                Notification.InboxStyle style = new Notification.InboxStyle();
-                style.setBigContentTitle(title);
-                style.setSummaryText(summary);
-                for (int i = 0; i < activeCount; i++) {
-                    DownloadJob job = activeJobs.get(i);
-                    if (job.isRunning()) {
-                        style.addLine(job.info.name);
-                    }
-                }
-                builder.setStyle(style);
-                notificationManager.notify(NOTIFY_ID, builder.build());
-            }
+            notifier.notify(activeInfos);
         }
     };
 
@@ -114,27 +79,23 @@ class DownloadEngine {
     DownloadProvider provider;
     Handler handler;
 
-    private Context context;
-
-    DownloadEngine(Context context, int maxTask) {
-        this.context = context.getApplicationContext();
+    DownloadEngine(int maxTask) {
         jobs = new HashMap<>();
         infos = new HashMap<>();
-        activeJobs = new ArrayList<>();
+        activeInfos = new ArrayList<>();
         interceptors = new ArrayList<>();
         downloadJobListeners = new ArrayList<>();
         handler = new Handler(Looper.getMainLooper());
         if (maxTask > CORE_POOL_SIZE) maxTask = CORE_POOL_SIZE;
         executor = new ThreadPoolExecutor(maxTask, maxTask, KEEP_ALIVE, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
         executor.allowCoreThreadTimeOut(true);
-        notificationManager = (NotificationManager) this.context.getSystemService(Context.NOTIFICATION_SERVICE);
-        provider = new DownloadProvider(this.context);
     }
 
     /**
      * load download info from the database
      */
-    void initialize() {
+    void initialize(Context context) {
+        provider = new DownloadProvider(context.getApplicationContext());
         executor.submit(new Runnable() {
             @Override
             public void run() {
@@ -179,7 +140,7 @@ class DownloadEngine {
     }
 
     boolean isActive() {
-        return activeJobs.size() > 0;
+        return activeInfos.size() > 0;
     }
 
     /**
@@ -213,6 +174,16 @@ class DownloadEngine {
     }
 
     /**
+     * set download notifier
+     */
+    void setDownloadNotifier(DownloadNotifier notifier) {
+        this.notifier = notifier;
+        if (notifier != null) {
+            notifier.notify(activeInfos);
+        }
+    }
+
+    /**
      * prepare for the task, while creating a task, should callback the download info to the listener
      */
     void prepare(DownloadTask task) {
@@ -243,7 +214,7 @@ class DownloadEngine {
             DownloadJob job = jobs.get(key);
             if (job.isRunning()) return;
             job.enqueue();
-            activeJobs.add(job);
+            activeInfos.add(job.info);
         } else {
             if (infos.containsKey(key)) return;         // means the job had completed
             DownloadInfo info = task.generateInfo();
@@ -253,7 +224,7 @@ class DownloadEngine {
             onJobCreated(info);
             job.addListener(task.listener);
             job.enqueue();
-            activeJobs.add(job);
+            activeInfos.add(info);
         }
         updateNotification();
     }
@@ -264,11 +235,12 @@ class DownloadEngine {
     void delete(DownloadTask task) {
         String key = task.key;
         if (!jobs.containsKey(key)) return;
+        DownloadInfo info = infos.get(key);
         DownloadJob job = jobs.remove(key);
         job.delete();
-        delete(infos.get(key));
-        if (!activeJobs.contains(job)) return;
-        activeJobs.remove(job);
+        delete(info);
+        if (!activeInfos.contains(info)) return;
+        activeInfos.remove(info);
         updateNotification();
     }
 
@@ -290,7 +262,7 @@ class DownloadEngine {
         DownloadJob job = jobs.get(key);
         if (job.isRunning()) return;
         job.resume();
-        activeJobs.add(job);
+        activeInfos.add(job.info);
         updateNotification();
     }
 
@@ -361,16 +333,15 @@ class DownloadEngine {
     /**
      * notify the downloadJob has been completed
      */
-    void onJobCompleted(boolean success, DownloadInfo info) {
+    void onJobCompleted(boolean finished, DownloadInfo info) {
         String key = info.key;
-        DownloadJob job = jobs.get(key);
-        activeJobs.remove(job);
+        activeInfos.remove(info);
         updateNotification();
-        if (success) {
+        if (finished) {
             jobs.remove(key);
         }
         for (DownloadJobListener downloadJobListener : downloadJobListeners) {
-            downloadJobListener.onCompleted(success, info);
+            downloadJobListener.onCompleted(finished, info);
         }
     }
 
@@ -378,14 +349,9 @@ class DownloadEngine {
      * update the notification avoid too fast
      */
     private void updateNotification() {
+        if (notifier == null) return;
         handler.removeCallbacks(updateNotificationRunnable);
         handler.postDelayed(updateNotificationRunnable, 100);
     }
 
-    /**
-     * @return whether is in main thread
-     */
-    private boolean isMainThread() {
-        return Looper.getMainLooper() == Looper.myLooper();
-    }
 }
