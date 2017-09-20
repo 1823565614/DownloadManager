@@ -1,7 +1,5 @@
 package com.androidev.download;
 
-import android.support.annotation.NonNull;
-
 /**
  * Created by 4ndroidev on 16/10/7.
  */
@@ -43,7 +41,7 @@ public class DownloadInfo implements Comparable<DownloadInfo> {
     }
 
     @Override
-    public int compareTo(@NonNull DownloadInfo another) {
+    public int compareTo(DownloadInfo another) {
         long diff = finishTime - another.finishTime;
         return diff == 0 ? 0 : diff > 0 ? -1 : 1;
     }

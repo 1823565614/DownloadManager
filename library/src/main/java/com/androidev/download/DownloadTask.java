@@ -1,7 +1,6 @@
 package com.androidev.download;
 
 import android.os.Environment;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import java.io.File;
@@ -120,7 +119,7 @@ public class DownloadTask implements Comparable<DownloadTask> {
     }
 
     @Override
-    public int compareTo(@NonNull DownloadTask other) {
+    public int compareTo(DownloadTask other) {
         long diff = createTime - other.createTime;
         return diff == 0 ? 0 : diff > 0 ? 1 : -1;
     }
