@@ -1,6 +1,8 @@
 # 安卓下载任务管理
 ---
 
+[![Download](https://api.bintray.com/packages/4ndroidev/maven/DownloadManager/images/download.svg) ](https://bintray.com/4ndroidev/maven/DownloadManager/_latestVersion)
+
 > 前言：上年开发了一个壁纸，音乐，应用，视频等资源浏览和下载安卓应用，准备分解功能模块做下笔记。下载页面UI设计参照 **网易云音乐**
 
 下载功能
