@@ -15,6 +15,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static com.androidev.download.DownloadState.STATE_PAUSED;
+import static com.androidev.download.DownloadState.STATE_RUNNING;
+
 /**
  * Created by 4ndroidev on 16/10/6.
  */
@@ -101,6 +104,8 @@ class DownloadEngine {
             public void run() {
                 List<DownloadInfo> list = provider.query();
                 for (DownloadInfo info : list) {
+                    if (STATE_RUNNING == info.state) // App had been force stopped
+                        info.state = STATE_PAUSED;
                     infos.put(info.key, info);
                     if (info.isFinished()) continue;
                     jobs.put(info.key, new DownloadJob(DownloadEngine.this, info));
