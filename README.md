@@ -16,6 +16,10 @@
 
 ![image](https://4ndroidev.github.io/images/android-download-manager/download-screenshot.jpg)
 
+使用 :
+
+	compile 'com.androidev:download:1.1.0'
+
 #### 实现原理
 
 下载任务流程图
@@ -59,9 +63,13 @@
 #### 使用说明
 
 ```java
+
+//初始化，主要是下载信息数据库读取
+DownloadManager.getInstance().initialize(context);
+
 //创建任务
-DownloadTask task = DownloadManager.get(context)
-	.download(id, url, name).listener(listener).create();
+DownloadTask task = DownloadManager.getInstance()
+	.newTask(id, url, name).listener(listener).create();
 
 //启动任务
 task.start();
