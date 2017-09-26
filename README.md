@@ -1,6 +1,8 @@
 # 安卓下载任务管理
 ---
 
+[![Download](https://api.bintray.com/packages/4ndroidev/maven/DownloadManager/images/download.svg) ](https://bintray.com/4ndroidev/maven/DownloadManager/_latestVersion)
+
 > 前言：上年开发了一个壁纸，音乐，应用，视频等资源浏览和下载安卓应用，准备分解功能模块做下笔记。下载页面UI设计参照 **网易云音乐**
 
 下载功能
@@ -15,6 +17,10 @@
 效果图
 
 ![image](https://4ndroidev.github.io/images/android-download-manager/download-screenshot.jpg)
+
+使用 :
+
+	compile 'com.androidev:download:1.1.0'
 
 #### 实现原理
 
@@ -59,9 +65,13 @@
 #### 使用说明
 
 ```java
+
+//初始化，主要是下载信息数据库读取
+DownloadManager.getInstance().initialize(context);
+
 //创建任务
-DownloadTask task = DownloadManager.get(context)
-	.download(id, url, name).listener(listener).create();
+DownloadTask task = DownloadManager.getInstance()
+	.newTask(id, url, name).listener(listener).create();
 
 //启动任务
 task.start();

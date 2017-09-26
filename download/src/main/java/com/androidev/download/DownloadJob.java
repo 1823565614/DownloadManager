@@ -16,6 +16,9 @@ import java.util.List;
 // one-to-one association with DownloadInfo
 class DownloadJob implements Runnable {
 
+    private static final int MIN_READ_STEP = 8 * 1024;
+    private static final int MIN_STORE_STEP = MIN_READ_STEP * 16;
+
     private boolean isPaused;
     private boolean isDeleted;
     private DownloadEngine engine;
@@ -179,14 +182,21 @@ class DownloadJob implements Runnable {
                 File file = new File(info.path);
                 randomAccessFile = new RandomAccessFile(file, "rw");
                 randomAccessFile.seek(finishedLength);
-                byte[] buffer = new byte[20480];
+                byte[] buffer = new byte[MIN_READ_STEP];
                 int len;
+                int buck = 0;
                 long bytesRead = finishedLength;
                 while (!this.isDeleted && !this.isPaused && (len = inputStream.read(buffer)) != -1) {
                     randomAccessFile.write(buffer, 0, len);
                     bytesRead += len;
                     finishedLength = bytesRead;
                     onProgressChanged(finishedLength, contentLength);
+                    buck += len;
+                    if (buck >= MIN_STORE_STEP) {
+                        buck = 0;
+                        randomAccessFile.getFD().sync();
+                        engine.provider.update(info);
+                    }
                 }
                 connection.disconnect();
                 if (isDeleted) {
