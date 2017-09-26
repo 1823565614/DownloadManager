@@ -169,6 +169,9 @@ class DownloadJob implements Runnable {
                 connection.setRequestProperty("Range", "bytes=" + finishedLength + "-" + contentLength);
             } else {
                 contentLength = connection.getContentLength();
+                if (contentLength == -1) {
+                    contentLength = Long.parseLong(connection.getHeaderField("Content-Length"));
+                }
             }
             int responseCode = connection.getResponseCode();
             if (contentLength > 0 && (responseCode == HttpURLConnection.HTTP_OK || responseCode == HttpURLConnection.HTTP_PARTIAL)) {
